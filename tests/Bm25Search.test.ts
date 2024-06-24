@@ -11,4 +11,34 @@ describe("Bm25Search module", () => {
     expect(() => bm25.addDocuments([])).not.toThrow();
     expect(() => bm25.addDocuments(["document 1", "document 2", "document 3"])).not.toThrow();
   });
+
+  test("Search should correctly score documents", () => {
+    const documents = [
+      "Shane",
+      "Shane C",
+      "Shane P Connelly",
+      "Shane Connelly",
+      "Shane Shane Connelly Connelly",
+      "Shane Shane Shane Connelly Connelly Connelly",
+    ];
+
+    const bm25 = new Bm25Search({
+      constants: {
+        b: 1.0,
+        k1: 5.0,
+      },
+    });
+
+    bm25.addDocuments(documents);
+    const results = bm25.search("Shane Connelly");
+    expect(results).toHaveLength(6);
+    expect(results).toBe([
+      { document: "Shane", score: 0.16674294 },
+      { document: "Shane Shane Shane Connelly Connelly Connelly", score: 0.10261105 },
+      { document: "Shane C", score: 0.102611035 },
+      { document: "Shane Connelly", score: 0.102611035 },
+      { document: "Shane Shane Connelly Connelly", score: 0.102611035 },
+      { document: "Shane P Connelly", score: 0.074107975 },
+    ]);
+  });
 });

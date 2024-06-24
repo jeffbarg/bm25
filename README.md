@@ -11,6 +11,42 @@ This API is based loosely off of the `js-search` package.
 
 ## BM25 Architecture
 
+First, the implementation broadly looks like:
+
+Preprocessing:
+
+Tokenize documents and queries
+Remove stopwords (optional)
+Apply stemming or lemmatization (optional)
+
+Index creation:
+
+- Build an inverted index mapping terms to documents
+- Calculate and store document lengths
+- Compute average document length
+
+IDF calculation:
+
+- For each term, calculate its inverse document frequency
+
+Scoring function:
+
+- Implement the BM25 formula
+- Set tuning parameters k1 and b
+
+Query processing:
+
+- Preprocess the query (tokenize, remove stopwords, etc.)
+- For each query term:
+  - Retrieve matching documents from the inverted index
+  - Calculate the BM25 score contribution
+- Sum scores for each document
+
+Ranking:
+
+- Sort documents by their total BM25 scores
+- Return top N results
+
 ```mermaid
 graph LR
     subgraph "Document Ingestion Process"
