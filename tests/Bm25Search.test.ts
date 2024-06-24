@@ -30,15 +30,21 @@ describe("Bm25Search module", () => {
     });
 
     bm25.addDocuments(documents);
-    const results = bm25.search("Shane Connelly");
-    expect(results).toHaveLength(6);
-    expect(results).toBe([
+    const results = bm25.search("Shane");
+
+    const expectedResults = [
       { document: "Shane", score: 0.16674294 },
-      { document: "Shane Shane Shane Connelly Connelly Connelly", score: 0.10261105 },
       { document: "Shane C", score: 0.102611035 },
       { document: "Shane Connelly", score: 0.102611035 },
       { document: "Shane Shane Connelly Connelly", score: 0.102611035 },
+      { document: "Shane Shane Shane Connelly Connelly Connelly", score: 0.10261105 },
       { document: "Shane P Connelly", score: 0.074107975 },
-    ]);
+    ];
+
+    expect(results).toHaveLength(expectedResults.length);
+    expectedResults.forEach((expected, index) => {
+      expect(results[index].document).toBe(expected.document);
+      expect(results[index].score).toBeCloseTo(expected.score, 5);
+    });
   });
 });

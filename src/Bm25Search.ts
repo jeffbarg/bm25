@@ -6,7 +6,6 @@ export namespace Bm25Search {
     constants?: {
       k1?: number;
       b?: number;
-      delta?: number;
     };
   }
 }
@@ -22,7 +21,6 @@ export class Bm25Search {
   // Configuration Constants
   private _k1 = 1.5;
   private _b = 0.75;
-  private _delta = 0.5;
 
   // Raw data
   private _documents: Bm25Search.Document[];
@@ -43,7 +41,6 @@ export class Bm25Search {
     if (config.constants) {
       this._k1 = config.constants.k1 !== undefined ? config.constants.k1 : this._k1;
       this._b = config.constants.b !== undefined ? config.constants.b : this._b;
-      this._delta = config.constants.delta !== undefined ? config.constants.delta : this._delta;
     }
   }
 
@@ -94,7 +91,7 @@ export class Bm25Search {
     const termFrequency = new Set(this._invertedIndex.get(term)).size; // TODO: Optimize this by precomputing the set of document IDs for each term at index time.
 
     // Use the formula from the BM25 paper
-    return Math.log((documentsCount - termFrequency + 0.5) / (termFrequency + 0.5));
+    return Math.log(1 + (documentsCount - termFrequency + 0.5) / (termFrequency + 0.5));
   }
 
   search(query: string): { document: Bm25Search.Document; score: number }[] {
@@ -116,6 +113,7 @@ export class Bm25Search {
 
         // f(qi,D) is “how many times does the ith query term occur in document D?”
         const f_qi_d = this._invertedIndex.get(term)?.filter((docId) => docId === documentId).length ?? 0;
+        console.log("f_qi_d", documentId, term, f_qi_d);
 
         const numerator = f_qi_d * (this._k1 + 1);
         const denominator =
@@ -137,8 +135,7 @@ export class Bm25Search {
     return (
       documentScores
         // .filter((documentScorePair) => documentScorePair.score > 0.0)
-        .sort((a, b) => b.score - a.score)
-        .reverse()
+        .sort((a, b) => b.score - a.score) // Sort by descending score
         .map((documentScorePair) => ({
           document: this._documents[documentScorePair.documentId],
           score: documentScorePair.score,
