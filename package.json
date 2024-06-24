@@ -3,6 +3,11 @@
   "version": "0.0.1",
   "description": "A pure typescript implementation of the BM25 search algorithm",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com:jeffbarg/bm25.git"
+  },
   "scripts": {
     "build": "tsc",
     "publish": "npm run build && npm publish",
