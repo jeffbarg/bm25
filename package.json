@@ -1,0 +1,26 @@
+{
+  "name": "@acmexyz/bm25",
+  "version": "0.0.1",
+  "description": "A pure typescript implementation of the BM25 search algorithm",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "publish": "npm run build && npm publish",
+    "test": "jest"
+  },
+  "keywords": [
+    "bm25",
+    "search",
+    "retrieval",
+    "vector"
+  ],
+  "author": "Jeff Barg",
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "^1.8.2",
+    "@types/jest": "^29.5.12",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.5",
+    "typescript": "^5.5.2"
+  }
+}
