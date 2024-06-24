@@ -15,9 +15,9 @@ First, the implementation broadly looks like:
 
 Preprocessing:
 
-Tokenize documents and queries
-Remove stopwords (optional)
-Apply stemming or lemmatization (optional)
+- Tokenize documents and queries
+- Remove stopwords (optional)
+- Apply stemming or lemmatization (optional)
 
 Index creation:
 
@@ -78,6 +78,18 @@ graph LR
 
     linkStyle default orthogonal
 ```
+
+# Todos
+
+- [ ] Add Performance Testing Suite
+- [ ] Make a better API (closer to js-search) to
+- [ ] Optimize Data Structures of Inverted Index and related statistics for calculating f_qi_idx without creating a new Set
+- [ ] Allow for filtered results i.e. don't always return all documents
+- [ ] Implement other BM25 variants
+- [ ] Publish package on Github and publish package to npmjs
+- [ ] Remove stopwords in index step
+- [ ] Apply stemming or lemmatization
+- [ ] Make tokens lower-case / case-insensitive
 
 # Prior Art
 
