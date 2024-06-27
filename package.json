@@ -1,5 +1,5 @@
 {
-  "name": "@acmexyz/bm25",
+  "name": "@acmexyz/bm25-search",
   "version": "0.0.1",
   "description": "A pure typescript implementation of the BM25 search algorithm",
   "main": "dist/umd/index.js",

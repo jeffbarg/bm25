@@ -78,7 +78,7 @@ export class Bm25Search<Document extends Record<string, string>, DocumentIdKey e
     const documents = this._documents;
     let documentLengthSum = 0; // This is the sum of the document lengths (in tokens). We will use this to compute the average document length
 
-    for (const [index, document] of documents.entries()) {
+    for (const document of documents.values()) {
       const documentId = document[this._idFieldName]; // For now, we'll use the index as the document ID
 
       // Tokenize the document
