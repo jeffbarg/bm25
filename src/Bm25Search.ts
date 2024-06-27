@@ -16,7 +16,7 @@ export namespace Bm25Search {
  *
  * @see {@link https://www.elastic.co/blog/practical-bm25-part-2-the-bm25-algorithm-and-its-variables} for a good walkthrough of BM25.
  */
-export class Bm25Search<Document extends Record<string, string>, DocumentIdKey extends keyof Document> {
+export class Bm25Search<Document extends Record<string, unknown>, DocumentIdKey extends keyof Document> {
   // Configuration Constants
   private _k1 = 1.5;
   private _b = 0.75;
@@ -82,7 +82,9 @@ export class Bm25Search<Document extends Record<string, string>, DocumentIdKey e
       const documentId = document[this._idFieldName]; // For now, we'll use the index as the document ID
 
       // Tokenize the document
-      const terms = this._indices.flatMap((indexedFieldKey) => this._tokenizer.tokenize(document[indexedFieldKey]));
+      const terms = this._indices.flatMap((indexedFieldKey) =>
+        this._tokenizer.tokenize(document[indexedFieldKey] as string)
+      );
 
       // Compute the document length
       documentLengths.set(documentId, { length: terms.length });
