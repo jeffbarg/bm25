@@ -1,7 +1,6 @@
 import { Tokenizer } from "./Tokenizer";
 
 export namespace Bm25Search {
-  export type Document = string;
   export interface Config {
     constants?: {
       k1?: number;
@@ -17,25 +16,31 @@ export namespace Bm25Search {
  *
  * @see {@link https://www.elastic.co/blog/practical-bm25-part-2-the-bm25-algorithm-and-its-variables} for a good walkthrough of BM25.
  */
-export class Bm25Search {
+export class Bm25Search<Document extends Record<string, string>, DocumentIdKey extends keyof Document> {
   // Configuration Constants
   private _k1 = 1.5;
   private _b = 0.75;
 
   // Raw data
-  private _documents: Bm25Search.Document[];
+  private _idFieldName: DocumentIdKey;
+  private _documents: Map<Document[DocumentIdKey], Document>;
+  private _indices: Array<keyof Document> = []; // This is the list of fields that we will index
 
   // Index and statistics
-  private _invertedIndex: Map<string, number[]> = new Map();
-  private _documentLengths = new Map<number, { length: number }>();
+  private _invertedIndex: Map<string, Array<Document[DocumentIdKey]>> = new Map(); // This is a map of terms to the document IDs that contain that term.
+  private _documentLengths = new Map<Document[DocumentIdKey], { length: number }>();
   private _averageDocumentLength = Number.NaN;
 
   // Internal tools
   private _tokenizer;
 
-  constructor(config: Bm25Search.Config = {}) {
-    this._documents = [];
+  constructor(idFieldName: DocumentIdKey, config: Bm25Search.Config = {}) {
+    this._documents = new Map();
     this._tokenizer = new Tokenizer();
+    this._indices = new Array<keyof Document>();
+
+    // Set the ID field name
+    this._idFieldName = idFieldName;
 
     // If the constants are provided, use them
     if (config.constants) {
@@ -44,9 +49,21 @@ export class Bm25Search {
     }
   }
 
-  addDocuments(documents: Bm25Search.Document[]): void {
+  /**
+   * Add a field to the index for future documents.
+   *
+   * @param indexedFieldKey the key of the field to index
+   */
+  addIndex(indexedFieldKey: keyof Document): void {
+    this._indices.push(indexedFieldKey);
+  }
+
+  addDocuments(documents: Document[]): void {
     // First, add the raw documents to the internal list
-    this._documents.push(...documents);
+    for (const document of documents) {
+      const documentId = document[this._idFieldName];
+      this._documents.set(documentId, document);
+    }
 
     // Compute the term frequency
     this._recomputeIndex();
@@ -55,17 +72,17 @@ export class Bm25Search {
   private _recomputeIndex(): void {
     // Reset the inverted index
     const invertedIndex = new Map();
-    const documentLengths = new Map<number, { length: number }>(); // This is a map of the document ID to the document length (in tokens)
+    const documentLengths = new Map<Document[DocumentIdKey], { length: number }>(); // This is a map of the document ID to the document length (in tokens)
 
     // Next, process the documents
     const documents = this._documents;
     let documentLengthSum = 0; // This is the sum of the document lengths (in tokens). We will use this to compute the average document length
 
     for (const [index, document] of documents.entries()) {
-      const documentId = index; // For now, we'll use the index as the document ID
+      const documentId = document[this._idFieldName]; // For now, we'll use the index as the document ID
 
       // Tokenize the document
-      const terms = this._tokenizer.tokenize(document);
+      const terms = this._indices.flatMap((indexedFieldKey) => this._tokenizer.tokenize(document[indexedFieldKey]));
 
       // Compute the document length
       documentLengths.set(documentId, { length: terms.length });
@@ -83,25 +100,26 @@ export class Bm25Search {
     // Update the inverted index and associated statistics
     this._invertedIndex = invertedIndex;
     this._documentLengths = documentLengths;
-    this._averageDocumentLength = documentLengthSum / documents.length;
+    this._averageDocumentLength = documentLengthSum / documents.size;
   }
 
   _computeIdf(term: string): number {
-    const documentsCount = this._documents.length;
+    const documentsCount = this._documents.size;
     const termFrequency = new Set(this._invertedIndex.get(term)).size; // TODO: Optimize this by precomputing the set of document IDs for each term at index time.
 
     // Use the formula from the BM25 paper
     return Math.log(1 + (documentsCount - termFrequency + 0.5) / (termFrequency + 0.5));
   }
 
-  search(query: string): { document: Bm25Search.Document; score: number }[] {
+  search(query: string): { document: Document; score: number }[] {
     // Preprocess the query (tokenize, remove stopwords, etc.)
     const queryTerms = this._tokenizer.tokenize(query);
 
     // For each document, calculate the BM25 score. `documentScores` will be a map of document ID to BM25 score
     // Since the document ID is the same as the index in the `_documents` array, we can use the index as the document ID by using `.map` as a hack for now.
-    const documentScores: { documentId: number; score: number }[] = this._documents.map((document, index) => {
-      const documentId = index;
+    const scoredDocuments: { document: Document; score: number }[] = [];
+    for (const [documentId, document] of this._documents.entries()) {
+      // Get the length of the document from cache
       const documentLength = this._documentLengths.get(documentId)?.length ?? 0;
 
       // For each query term, calculate the BM25 score contribution
@@ -128,16 +146,16 @@ export class Bm25Search {
       const documentScore = queryScoreParts.reduce((acc, score) => acc + score, 0.0);
 
       // Return the document ID and the total BM25 score pair
-      return { documentId, score: documentScore };
-    });
+      scoredDocuments.push({ document, score: documentScore });
+    }
 
     // Return the documents in the order of their BM25 scores
     return (
-      documentScores
+      scoredDocuments
         // .filter((documentScorePair) => documentScorePair.score > 0.0)
         .sort((a, b) => b.score - a.score) // Sort by descending score
         .map((documentScorePair) => ({
-          document: this._documents[documentScorePair.documentId],
+          document: documentScorePair.document,
           score: documentScorePair.score,
         }))
     );

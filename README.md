@@ -5,9 +5,10 @@ This is a pure typescript implementation of the BM25 retrieval algorithm with no
 The package exports a class BM25Search, which has two primary methods:
 
 - `.addDocuments` which creates an inverted term-frequency index and computes relevant statistics about the documents
+- `.addIndex` adds an indexed field for the search documents
 - `.search` which returns relevant documents based on a search term.
 
-This API is based loosely off of the `js-search` package.
+This API is a drop-in replacement for the `js-search` package.
 
 ## BM25 Architecture
 
