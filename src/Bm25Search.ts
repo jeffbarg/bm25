@@ -150,14 +150,12 @@ export class Bm25Search<Document extends Record<string, string>, DocumentIdKey e
     }
 
     // Return the documents in the order of their BM25 scores
-    return (
-      scoredDocuments
-        // .filter((documentScorePair) => documentScorePair.score > 0.0)
-        .sort((a, b) => b.score - a.score) // Sort by descending score
-        .map((documentScorePair) => ({
-          document: documentScorePair.document,
-          score: documentScorePair.score,
-        }))
-    );
+    return scoredDocuments
+      .filter((documentScorePair) => documentScorePair.score > 0.0)
+      .sort((a, b) => b.score - a.score) // Sort by descending score
+      .map((documentScorePair) => ({
+        document: documentScorePair.document,
+        score: documentScorePair.score,
+      }));
   }
 }
