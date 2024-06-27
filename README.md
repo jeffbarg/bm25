@@ -2,6 +2,8 @@
 
 This is a pure typescript implementation of the BM25 retrieval algorithm with no runtime dependencies.
 
+It's an efficient, lightweight search engine for objects (documents) using SOTA retrieval algorithms.
+
 The package exports a class BM25Search, which has two primary methods:
 
 - `.addDocuments` which creates an inverted term-frequency index and computes relevant statistics about the documents
